@@ -1,4 +1,3 @@
-import Nav from './components/Nav/Nav';
 import './App.scss';
 import React from "react";
 import {
@@ -6,30 +5,49 @@ import {
 } from "react-router-dom";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect,useContext } from 'react';
 import AppRoutes from './routes/AppRoutes';
-function App() {
-  const [account, setAccount] = useState({});//an hien nav
+import { TailSpin } from  'react-loader-spinner'
+import { UserContext } from './context/UserContext';
+import NavHeader from './components/Nav/NavHeader';
+import { Scrollbars } from "react-custom-scrollbars";
+const App =()=> {
+  const { user } = useContext(UserContext);
+  const [scrollHeight, setScrollHeight] = useState(0);
   useEffect(() => {
-    let session = sessionStorage.getItem('account');
-    //neu da co bien session thi cap nhat lai giao dien
-    if (session) {
-      // console.log(session);
-      setAccount(JSON.parse(session));
-    }
-  },[])
+    let windowHeight = window.innerHeight;
+    setScrollHeight(windowHeight);
+
+  },[user])
   return (
-    <>
+    <Scrollbars autoHide style={{height:scrollHeight}}>
       <Router>
-        <div className="app-header">
-          <Nav/>
-        </div>
-        <AppRoutes/>
-        <div className='app-container'>
-      </div>
+        {
+          user && user.isLoading ?
+            <div className='loading-container'> 
+              
+          <TailSpin
+            height="100"
+            width="100"
+            color='#1877f2'
+            ariaLabel='loading'
+              />
+              <div>Loading data ...</div>
+            </div>
+            :
+            <>
+              <div className="app-header">
+                <NavHeader/>
+              </div>
+              <AppRoutes/>
+              <div className='app-container'>
+              </div>
+            </>
+        }
+        
       <ToastContainer
         position="top-center"
-        autoClose={5000}
+        autoClose={3000}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick
@@ -39,7 +57,7 @@ function App() {
         pauseOnHover
         />
     </Router>
-      </>
+      </Scrollbars>
   );
 }
 

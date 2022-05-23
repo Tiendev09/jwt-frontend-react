@@ -1,11 +1,13 @@
 import './Login.scss';
 import { useHistory } from "react-router-dom";
-import { useState,useEffect } from 'react';
+import React,{ useState,useEffect } from 'react';
 import { toast, Toast } from 'react-toastify';
 import { loginUser } from '../../services/userService';
+import { UserContext } from '../../context/UserContext';
+import { NavLink,Link } from 'react-router-dom';
 const Login = (props) => {
+    const { loginContext,user } = React.useContext(UserContext);
     let history = useHistory();
-
     const [valueLogin, setValueLogin] = useState("");
     const [password, setPassword] = useState("");
 
@@ -17,6 +19,11 @@ const Login = (props) => {
     const handleCreateNewAccount = () => {
         history.push("/register")
     }
+    useEffect(() => {
+        if (user && user.isAuthenticated) {
+            history.push('/');
+       } 
+    },[])
     const handleLogin = async() => {
         setObjValidInput(defautObjValidInput);
         if (!valueLogin) {
@@ -32,14 +39,20 @@ const Login = (props) => {
         let response = await loginUser(valueLogin, password);
         if (response && +response.EC === 0) {
             //success
+            let groupWithRoles = response.DT.groupWithRoles;
+            let email = response.DT.email;
+            let username = response.DT.username;
+            let token = response.DT.access_Token;
             let data = {
                 isAuthenticated: true,
-                token:"fake token"
+                token: token,
+                account: {
+                    groupWithRoles,email,username
+                }
             }
-
-            sessionStorage.setItem('account', JSON.stringify(data));
+            localStorage.setItem("jwt",token)
+            loginContext(data);
             history.push("/users")
-            window.location.reload();
             
         }
         if (response && +response.EC !== 0) {
@@ -53,21 +66,13 @@ const Login = (props) => {
             handleLogin();
         }
     }
-    useEffect(() => {
-        let session = sessionStorage.getItem('account');
-        //neu da co bien session thi cap nhat lai giao dien
-        if (session) {
-            history.push("/");
-            window.location.reload();
-        }
-    },[])
     return (
         <div className="login-container">
             <div className="container px-4 px-md-0">
                 <div className="row">
                     <div className="col-12 d-none content-left col-md-7 d-md-block ">
                         <div className="brand">
-                            Facebook
+                            <NavLink className="logo" to={"/"}>Facebook</NavLink>
                         </div>
                         <div className="detail">
                             Facebook helps you connect and share with the people in your life
@@ -88,6 +93,11 @@ const Login = (props) => {
                             <button className='btn btn-success' onClick={()=>{handleCreateNewAccount()}}>
                                 Create New Account
                             </button>
+                        </div>
+                        <div className='text-center'>
+                            <Link to='/' className='logo'><i className="fa fa-arrow-circle-left"></i>
+                                <span> Return to home page</span>
+                            </Link>
                         </div>
                     </div>
                 </div>

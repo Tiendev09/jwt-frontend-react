@@ -1,5 +1,5 @@
 
-import { useEffect,useState } from "react";
+import React,{ useEffect,useState } from "react";
 import { deleteUser, fetchAllUser } from "../../services/userService";
 import "./Users.scss";
 import ReactPaginate from 'react-paginate';
@@ -21,12 +21,19 @@ const Users = (props) => {
     useEffect(() => {
         fetchUsers();
     }, [currentPage]);
-    const fetchUsers = async() => {
+    
+    const fetchUsers = async () => {
         let response = await fetchAllUser(currentPage, currentLimit);
-        console.log(">>check response", response);
         if (response &&+response.EC === 0) {
             setTotalPages(response.DT.totalPages);
-            setListUsers(response.DT.users);
+            if (response.DT.totalPages > 0 && response.DT.users.length === 0) {
+                setCurrentPage(+response.DT.totalPages);
+                await fetchAllUser(+response.DT.totalPages, currentLimit);
+            }
+            if (response.DT.totalPages > 0 && response.DT.users.length > 0) {
+                setListUsers(response.DT.users);
+            }
+            
         }
     }
     const handlePageClick = (event) => {
@@ -90,7 +97,7 @@ const Users = (props) => {
                             <th scope="col">Email</th>
                             <th scope="col">Username</th>
                             <th scope="col">Group</th>
-                            <th>Actions</th>
+                            <th scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -145,6 +152,7 @@ const Users = (props) => {
                         containerClassName="pagination"
                         activeClassName="active"
                         renderOnZeroPageCount={null}
+                        forcePage={+currentPage-1}
                         />
                     </div>
                 }
